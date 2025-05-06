@@ -19,13 +19,11 @@ class EstadoUsuario(str, Enum):
 # --- Modelo de Usuario ---
 class Usuario(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    nombre: str = Field(max_length=50)
-    email: str = Field(max_length=100, unique=True)
+    nombre: str
+    email: str
     estado: EstadoUsuario = Field(default=EstadoUsuario.ACTIVO)
     premium: bool = Field(default=False)
-
-    # Relación opcional con tareas (1 usuario → muchas tareas)
-    tareas: list["Tarea"] = Relationship(back_populates="usuario")
+    fecha_modificacion: Optional[datetime] = Field(default=None)  # Nuevo campo añadido
 
 # --- Modelo de Tarea ---
 class Tarea(SQLModel, table=True):
