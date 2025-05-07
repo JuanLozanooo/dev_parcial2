@@ -6,7 +6,15 @@ from operations.operations_db import UserOperations, TaskOperations
 from data.models import Usuario, EstadoUsuario, Tarea, EstadoTarea
 from typing import List, Optional
 from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import APIRouter
 
+
+router = APIRouter()
+
+@router.get("/")
+@router.head("/")
+async def root():
+    return {"message": "API de Gestión de Usuarios y Tareas"}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
