@@ -1,9 +1,8 @@
 from typing import List, Optional
 from sqlmodel import select, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
-from data.models import Usuario, EstadoUsuario
+from data.models import Usuario, EstadoUsuario, Tarea, EstadoTarea
 from datetime import datetime
-
 
 class UserOperations:
 
@@ -105,3 +104,63 @@ class UserOperations:
             )
         )
         return result.scalars().all()
+
+class TaskOperations:
+
+    @staticmethod
+    async def create_task(
+            session: AsyncSession,
+            usuario_id: int,
+            nombre: str,
+            descripcion: Optional[str] = None
+    ) -> Tarea:
+        """Crea una nueva tarea asociada a un usuario"""
+        user = await UserOperations.get_user_by_id(session, usuario_id)
+        if not user:
+            raise ValueError("El usuario no existe")
+
+        nueva_tarea = Tarea(
+            nombre=nombre,
+            descripcion=descripcion,
+            usuario_id=usuario_id
+        )
+        session.add(nueva_tarea)
+        await session.commit()
+        await session.refresh(nueva_tarea)
+        return nueva_tarea
+
+    @staticmethod
+    async def get_user_tasks(
+            session: AsyncSession,
+            usuario_id: int
+    ) -> List[Tarea]:
+        """Obtiene todas las tareas de un usuario"""
+        result = await session.execute(
+            select(Tarea).where(Tarea.usuario_id == usuario_id)
+        )
+        return result.scalars().all()
+
+    @staticmethod
+    async def update_task_status(
+            session: AsyncSession,
+            task_id: int,
+            new_status: EstadoTarea
+    ) -> Optional[Tarea]:
+        """Actualiza el estado de una tarea"""
+        task = await session.get(Tarea, task_id)
+        if not task:
+            return None
+
+        task.estado = new_status
+        task.fecha_modificacion = datetime.now()
+        await session.commit()
+        await session.refresh(task)
+        return task
+
+    @staticmethod
+    async def get_task_by_id(
+            session: AsyncSession,
+            task_id: int
+    ) -> Optional[Tarea]:
+        """Obtiene una tarea por su ID"""
+        return await session.get(Tarea, task_id)

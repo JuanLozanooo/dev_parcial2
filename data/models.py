@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -16,16 +16,18 @@ class EstadoUsuario(str, Enum):
     INACTIVO = "Inactivo"
     ELIMINADO = "Eliminado"
 
-# --- Modelo de Usuario ---
 class Usuario(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str
     email: str
     estado: EstadoUsuario = Field(default=EstadoUsuario.ACTIVO)
     premium: bool = Field(default=False)
-    fecha_modificacion: Optional[datetime] = Field(default=None)  # Nuevo campo añadido
+    fecha_modificacion: Optional[datetime] = Field(default=None)
 
-# --- Modelo de Tarea ---
+    # Relación con tareas
+    tareas: List["Tarea"] = Relationship(back_populates="usuario")  # Nuevo campo
+
+
 class Tarea(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(max_length=100)
@@ -33,8 +35,8 @@ class Tarea(SQLModel, table=True):
     fecha_creacion: datetime = Field(default_factory=datetime.now)
     fecha_modificacion: Optional[datetime] = Field(default=None)
     estado: EstadoTarea = Field(default=EstadoTarea.PENDIENTE)
-    
-    # Clave foránea al usuario (relación muchos a 1)
+
+    # Relación con usuario
     usuario_id: Optional[int] = Field(default=None, foreign_key="usuario.id")
     usuario: Optional[Usuario] = Relationship(back_populates="tareas")
 
